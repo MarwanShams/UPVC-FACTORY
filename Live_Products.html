@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Product Info</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background-color: #f9f9f9;
+    }
+    .container {
+      background: #fff;
+      padding: 20px 30px;
+      max-width: 600px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      border-radius: 10px;
+    }
+    .image {
+      width: 100%;
+      max-height: 300px;
+      object-fit: contain;
+      border: 1px solid #ccc;
+      margin-bottom: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .row {
+      margin-bottom: 12px;
+    }
+    .label {
+      font-weight: bold;
+      color: #444;
+    }
+    .value {
+      color: #222;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 id="partNo">Loading...</h1>
+    <img id="productImage" class="image" src="" alt="Product Image">
+    <div class="row"><span class="label">Item No:</span> <span class="value" id="itemNo"></span></div>
+    <div class="row"><span class="label">Item Category:</span> <span class="value" id="itemCategory"></span></div>
+    <div class="row"><span class="label">HS Code:</span> <span class="value" id="hsCode"></span></div>
+    <div class="row"><span class="label">Description:</span> <span class="value" id="description"></span></div>
+    <div class="row"><span class="label">Thickness:</span> <span class="value" id="thickness"></span></div>
+    <div class="row"><span class="label">Length:</span> <span class="value" id="length"></span></div>
+    <div class="row"><span class="label">QTY:</span> <span class="value" id="qty"></span></div>
+  </div>
+
+  <script>
+    const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRSAem6OC-zlh8rqYPIdHVLxKe9pXS4hXl6d_cR1jVO-ebzilDRVqLofZXxNsECjNqFwHaJMcPnA8UO/pub?gid=0&single=true&output=csv';
+    const params = new URLSearchParams(window.location.search);
+    const partNo = params.get('id');
+
+    fetch(sheetURL)
+      .then(res => res.text())
+      .then(csvText => {
+        const rows = csvText.split('\n').map(r => r.split(','));
+        const headers = rows[0];
+        const partIndex = headers.indexOf('Part No');
+        const row = rows.find(r => r[partIndex] === partNo);
+
+        if (row) {
+          const data = {};
+          headers.forEach((h, i) => data[h.trim()] = row[i]);
+
+          document.getElementById('partNo').innerText = data['Part No'];
+          document.getElementById('itemNo').innerText = data['Item No'];
+          document.getElementById('itemCategory').innerText = data['Item Category'];
+          document.getElementById('hsCode').innerText = data['HS Code'];
+          document.getElementById('description').innerText = data['Description'];
+          document.getElementById('thickness').innerText = data['Thickness'];
+          document.getElementById('length').innerText = data['Length'];
+          document.getElementById('qty').innerText = data['QTY'];
+
+          // Construct image URL
+          const imgFile = data['Illustration'] || `${data['Part No']}.PNG`;
+          document.getElementById('productImage').src =
+            `https://raw.githubusercontent.com/MarwanShams/UPVC-FACTORY/refs/heads/main/IMAGES/${imgFile}`;
+        } else {
+          document.querySelector('.container').innerHTML = `<h1>Product ${partNo} Not Found</h1>`;
+        }
+      });
+  </script>
+</body>
+</html>
